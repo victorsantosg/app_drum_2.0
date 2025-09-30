@@ -5,7 +5,7 @@ import threading
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, simpledialog
 import pygame
-from db_backend import init_db, save_groove, load_all_grooves, load_groove_by_id, delete_groove
+from db_backend import init_db, save_groove, load_all_grooves, load_groove_by_id, delete_groove, DB_FILE
 import sys
 
 def resource_path(relative_path):
@@ -21,7 +21,7 @@ SAMPLES_PATH = resource_path("samples")
 SAMPLES_PATH = "samples"
 INSTRUMENTS = {
     "kick": ["Attack Kick 15.wav", "Attack Kick 46.wav", "Downstream Kick 04.wav", "FL 808 Kick.wav", "FL 909 Kick Alt.wav", "FL 909 Kick.wav", "FL Basic Kick.wav"],
-    "snare": ["Attack Clap 03.wav", "Attack Snare 03.wav", "Attack Snare 26.wav", "FL 808 Snare.wav", "FL 808 Snare.wav", "FL 909 Snare.wav", "FL 909 Rim.wav"],
+    "snare": ["FL 808 Snare.wav", "Attack Snare 03.wav", "Attack Snare 26.wav", "FL Grv Snareclap 30.wav", "FL 808 Snare.wav", "FL 909 Snare.wav", "FL 909 Rim.wav"],
     "hat": ["Attack Hat 06.wav", "Attack OHat 02.wav"],
     "tom": ["FL 808 Tom.wav", "FL 909 Tom.wav"],
 }
@@ -42,10 +42,28 @@ PRESETS = {
         "hat":   [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
         "tom":   [0]*16
     },
-    "Rock Balada": {
-        "kick":  [1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1],
-        "snare": [0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0],
-        "hat":   [1]*16,
+    "Rock Basico": {
+        "kick":  [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
+        "snare": [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+        "hat":   [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0],
+        "tom":   [0]*16
+    },
+    "Rock Classico": {
+        "kick":  [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
+        "snare": [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+        "hat":   [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0],
+        "tom":   [0]*16
+    },
+    "Reggae Leve":{
+        "kick":  [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
+        "snare": [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+        "hat":   [0,1,0,1, 0,1,0,1, 0,1,0,1, 0,1,0,1],
+        "tom":   [0]*16
+    },
+    "Samba": {
+        "kick":  [1,0,0,1, 0,1,0,0, 1,0,0,1, 0,1,0,0],
+        "snare": [0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0],
+        "hat":   [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1],
         "tom":   [0]*16
     }
 }
@@ -221,12 +239,17 @@ class DrumMachine:
     # ---------------- DB ---------------- #
     def save_to_db(self):
         name = simpledialog.askstring("Nome do Groove", "Digite o nome do groove:")
-        if not name: return
-        save_groove(name, self.bpm.get(),
+        if not name:
+            return
+        new_id = save_groove(name, self.bpm.get(),
                     {inst: self.sequence[inst].copy() for inst in INSTRUMENTS.keys()},
                     {inst: self.timbre_vars[inst].get() for inst in self.timbre_vars})
-        messagebox.showinfo("Sucesso", f"Groove '{name}' salvo no banco!")
-        self.refresh_db_list()
+        if new_id is None:
+            messagebox.showerror("Erro", "Não foi possível salvar o groove. Veja o console para detalhes.")
+        else:
+            messagebox.showinfo("Sucesso", f"Groove '{name}' salvo com id {new_id}!")
+            self.refresh_db_list()
+
 
     def refresh_db_list(self):
         grooves = load_all_grooves()
@@ -257,7 +280,8 @@ class DrumMachine:
     # ---------------- PRESETS ---------------- #
     def load_preset(self):
         preset_name = self.preset_var.get()
-        if preset_name not in PRESETS: return
+        if preset_name not in PRESETS:
+            return
         preset = PRESETS[preset_name]
         for inst in INSTRUMENTS.keys():
             self.sequence[inst] = preset.get(inst, [0]*NUM_STEPS).copy()
@@ -265,9 +289,12 @@ class DrumMachine:
             for col in range(NUM_STEPS):
                 self.update_button_color(inst, col)
 
+
+
 # ---------------- MAIN ---------------- #
 if __name__ == "__main__":
     init_db()
+    print("DB file location:", os.path.abspath(DB_FILE))  # se importar db_backend como alias
     root = tk.Tk()
     app = DrumMachine(root)
     root.mainloop()
