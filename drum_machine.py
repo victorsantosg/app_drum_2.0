@@ -6,6 +6,16 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, simpledialog
 import pygame
 from db_backend import init_db, save_groove, load_all_grooves, load_groove_by_id, delete_groove
+import sys
+
+def resource_path(relative_path):
+    """Ajusta caminho de arquivos quando empacotado com PyInstaller"""
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
+SAMPLES_PATH = resource_path("samples")
+
 
 # ---------------- CONFIG ---------------- #
 SAMPLES_PATH = "samples"
@@ -26,7 +36,7 @@ DISPLAY_NAMES = {
 NUM_STEPS = 16
 
 PRESETS = {
-    "Reggae Romântico": {
+    "Reggae": {
         "kick":  [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
         "snare": [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0],
         "hat":   [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
@@ -80,11 +90,11 @@ class DrumMachine:
         # ---------------- Presets ---------------- #
         preset_frame = ttk.Frame(self.root, padding=5)
         preset_frame.pack(fill="x", padx=5, pady=5)
-        ttk.Label(preset_frame, text="Preset:").pack(side="left")
+        ttk.Label(preset_frame, text="Presets:").pack(side="left")
         self.preset_var = tk.StringVar()
         preset_combo = ttk.Combobox(preset_frame, textvariable=self.preset_var, values=list(PRESETS.keys()))
         preset_combo.pack(side="left", padx=5)
-        ttk.Button(preset_frame, text="Carregar Preset", command=self.load_preset).pack(side="left", padx=5)
+        ttk.Button(preset_frame, text="Carregar", command=self.load_preset).pack(side="left", padx=5)
 
         # ---------------- Timbres ---------------- #
         self.timbre_vars = {}
@@ -104,9 +114,9 @@ class DrumMachine:
         ttk.Label(db_frame, text="Grooves Salvos:").pack(side="left")
         self.db_list = ttk.Combobox(db_frame, values=[], width=30)
         self.db_list.pack(side="left", padx=5, fill="x", expand=True)
-        ttk.Button(db_frame, text="Salvar no DB", command=self.save_to_db).pack(side="left", padx=3)
-        ttk.Button(db_frame, text="Carregar do DB", command=self.load_from_db).pack(side="left", padx=3)
-        ttk.Button(db_frame, text="Excluir do DB", command=self.delete_from_db).pack(side="left", padx=3)
+        ttk.Button(db_frame, text="Salvar Preset", command=self.save_to_db).pack(side="left", padx=3)
+        ttk.Button(db_frame, text="Tocar Preset", command=self.load_from_db).pack(side="left", padx=3)
+        ttk.Button(db_frame, text="Excluir Preset", command=self.delete_from_db).pack(side="left", padx=3)
         ttk.Button(db_frame, text="Atualizar Lista", command=self.refresh_db_list).pack(side="left", padx=3)
 
         # ---------------- Sequencer ---------------- #
@@ -130,8 +140,8 @@ class DrumMachine:
         ctrl_frame.pack(fill="x", padx=5, pady=5)
         ttk.Button(ctrl_frame, text="▶ Play", command=self.start).pack(side="left", padx=5)
         ttk.Button(ctrl_frame, text="⏹ Stop", command=self.stop).pack(side="left", padx=5)
-        ttk.Button(ctrl_frame, text="💾 Salvar JSON", command=self.save_groove).pack(side="left", padx=5)
-        ttk.Button(ctrl_frame, text="📂 Carregar JSON", command=self.load_groove).pack(side="left", padx=5)
+        ttk.Button(ctrl_frame, text="💾 Extrair Preset", command=self.save_groove).pack(side="left", padx=5)
+        ttk.Button(ctrl_frame, text="📂 Importar Preset", command=self.load_groove).pack(side="left", padx=5)
 
         self.refresh_db_list()
 
