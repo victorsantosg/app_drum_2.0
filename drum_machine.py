@@ -7,6 +7,24 @@ from tkinter import ttk, filedialog, messagebox, simpledialog
 import pygame
 from db_backend import init_db, save_groove, load_all_grooves, load_groove_by_id, delete_groove, DB_FILE
 import sys
+import requests
+
+VERSION = "1.0.0"
+UPDATE_URL = "https://seusite.com/drum_machine_latest.exe"
+
+def check_for_update():
+    try:
+        latest_version = requests.get("https://seusite.com/version.txt").text.strip()
+        if latest_version != VERSION:
+            # baixar novo .exe
+            r = requests.get(UPDATE_URL)
+            with open("drum_machine_new.exe", "wb") as f:
+                f.write(r.content)
+            # informar usuário para substituir o antigo
+            print("Nova versão baixada: drum_machine_new.exe")
+    except Exception as e:
+        print("Não foi possível verificar atualização:", e)
+
 
 def resource_path(relative_path):
     """Ajusta caminho de arquivos quando empacotado com PyInstaller"""
